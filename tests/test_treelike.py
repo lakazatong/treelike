@@ -19,13 +19,17 @@ class Tree(TreeLike):
 		self.uuid = str(uuid.uuid4())
 		self._children = []
 		self.test = []
-		self.repr_include_falsy = False
-		self.repr_keys = False
+		self.repr_whitelist.add('uuid')
+		# self.repr_falsy = True
+		# self.repr_keys = False
+		# self.repr_whitelist.add('uuid')
+		# self.repr_own_attrs = True
+		# self.repr_by_default = True
 		# self.repr_spacing = 1
 		# self.repr_symbols = {
 		# 	"vertical": "│",
 		# 	"horizontal": "─",
-		# 	"corner": "└",
+		# 	"corner": "c",
 		# 	"intersection": "├",
 		# 	"arrow": "►",
 		# 	"space": " "
@@ -34,11 +38,11 @@ class Tree(TreeLike):
 		# self.repr_horizontal = "⎯"
 		# self.repr_corner = "✦"
 		# self.repr_intersection = "✦"
-		# self.repr_arrow = ">"
+		# self.repr_arrow = "> "
 		# self.repr_space = " "
 
 	def repr_uuid(self):
-		return 'uuid', self.uuid[-3:]
+		return 'uuid', None
 
 	def repr_self(self):
 		return "1"
