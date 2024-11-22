@@ -32,20 +32,23 @@ def create_symbol_property(symbol_name):
 class TreeLike(Repr):
 	@property
 	@abstractmethod
-	def children(self) -> list['TreeLike']:
+	def children(self):
 		pass
 
 	@children.setter
 	@abstractmethod
-	def children(self, value: list['TreeLike']):
+	def children(self, value):
 		pass
 
 	@abstractmethod
-	def __eq__(self, other: object) -> bool:
+	def __hash__(self):
 		pass
+	
+	def __eq__(self, other):
+		return hash(self) == hash(other)
 
-	def __ne__(self, other: object) -> bool:
-		return not (self == other)
+	def __ne__(self, other):
+		return hash(self) != hash(other)
 
 	def __init__(self):
 		super().__init__()
@@ -85,24 +88,23 @@ class TreeLike(Repr):
 			raise ValueError("Spacing must be a positive integer.")
 		self._repr_spacing = spacing
 
-	def _pretty(self, stack: list['TreeLike']) -> str:
+	def _pretty(self, stack, seen):
 		depth = len(stack)
 		stack.append(self)
 		r = ""
-		for i in range(depth):
-			if stack[i + 1] != self:
+		for i in range(depth - 1):
+			if stack[i + 1] != self or stack[i + 1] in seen:
 				r += (self._repr_space if stack[i].children and stack[i].children[-1] == stack[i + 1] else self._repr_vertical) + self._repr_space + self._repr_space * (self._repr_spacing + self._extra_spacing)
-			else:
-				r += (self._repr_corner if stack[i].children[-1] == self else self._repr_intersection) + self._repr_horizontal * self._repr_spacing + self._repr_arrow
-		r += str(self) + "\n"
-		for child in self.children:
-			r += child._pretty(stack)
+		r += (self._repr_corner if stack[depth - 1].children[-1] == self else self._repr_intersection) + self._repr_horizontal * self._repr_spacing + self._repr_arrow + str(self) + "\n"
+		if self not in seen:
+			seen.add(self)
+			for child in self.children:
+				r += child._pretty(stack, seen)
 		stack.pop()
 		return r
 
-	def pretty(self) -> str:
-		stack = [self]
+	def pretty(self):
 		r = str(self) + "\n"
 		for child in self.children:
-			r += child._pretty(stack)
+			r += child._pretty([self], set())
 		return r[:-1]  # ignore last \n
