@@ -92,13 +92,24 @@ class TreeLike(Repr):
 		depth = len(stack)
 		stack.append(self)
 		r = ""
-		for i in range(depth - 1):
-			if stack[i + 1] != self or stack[i + 1] in seen:
-				r += (self._repr_space if stack[i].children and stack[i].children[-1] == stack[i + 1] else self._repr_vertical) + self._repr_space + self._repr_space * (self._repr_spacing + self._extra_spacing)
-		r += (self._repr_corner if stack[depth - 1].children[-1] == self else self._repr_intersection) + self._repr_horizontal * self._repr_spacing + self._repr_arrow + str(self) + "\n"
+		def add_to_r(node, depth, stack, last):
+			nonlocal r
+			for i in range(depth - 1):
+				if stack[i + 1] != node or stack[i + 1] in seen:
+					r += (node._repr_space if stack[i].children and stack[i].children[-1] == stack[i + 1] else node._repr_vertical) + node._repr_space + node._repr_space * (node._repr_spacing + node._extra_spacing)
+			r += (node._repr_corner if stack[depth - 1].children[-1] == node and last else node._repr_intersection) + node._repr_horizontal * node._repr_spacing + node._repr_arrow + str(node) + "\n"
+		add_to_r(self, depth, stack, True)
 		if self not in seen:
 			seen.add(self)
 			for child in self.children:
+				n = self.children.count(child)
+				if child in seen:
+					if n == 1:
+						add_to_r(child, depth + 1, stack + [child], True)
+					continue
+				if n > 1:
+					for _ in range(n-1):
+						add_to_r(child, depth + 1, stack + [child], False)
 				r += child._pretty(stack, seen)
 		stack.pop()
 		return r
@@ -106,5 +117,5 @@ class TreeLike(Repr):
 	def pretty(self):
 		r = str(self) + "\n"
 		for child in self.children:
-			r += child._pretty([self], set())
+			r += child._pretty([self], set([self]))
 		return r[:-1]  # ignore last \n
